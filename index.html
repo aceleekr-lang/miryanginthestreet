@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>밀양인더스트릿 여행자 가이드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="config.js"></script>
+<style>
+:root{
+  --bg:#F7F8F5; --card:#FFFFFF; --ink:#22322B; --sub:#5C6B63;
+  --pine:#2F6B52; --pine-deep:#245240; --pine-soft:#E3EFE7; --pine-line:#C7DCCE;
+  --coral:#D96C4A; --coral-soft:#FBEDE7; --line:#E1E6E1; --danger:#C24B32;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:Pretendard,-apple-system,sans-serif;background:var(--bg);color:var(--ink);
+  font-size:16px;line-height:1.55;letter-spacing:-.01em}
+#app{max-width:520px;margin:0 auto;min-height:100vh;padding:0 0 48px}
+.screen{display:none;padding:20px}
+.screen.on{display:block}
+header.brand{padding:26px 20px 4px}
+.brand h1{font-size:15px;font-weight:600;color:var(--pine);letter-spacing:.02em}
+.brand h1 span{color:var(--sub);font-weight:400}
+h2.title{font-size:24px;font-weight:800;line-height:1.3;margin:14px 0 6px}
+p.lead{color:var(--sub);font-size:15px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+label.f{display:block;font-size:13.5px;font-weight:600;color:var(--sub);margin:14px 0 6px}
+input.t{width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--line);border-radius:10px;
+  background:#fff;font-family:inherit}
+input.t:focus{outline:none;border-color:var(--pine)}
+.btn{display:block;width:100%;padding:15px;border:none;border-radius:12px;font-size:16.5px;font-weight:700;
+  font-family:inherit;cursor:pointer;text-align:center}
+.btn.p{background:var(--pine);color:#fff}
+.btn.p:active{background:var(--pine-deep)}
+.btn.p:disabled{background:#B9C6BE;cursor:default}
+.btn.g{background:var(--pine-soft);color:var(--pine-deep)}
+.btn.line{background:#fff;border:1.5px solid var(--line);color:var(--ink);font-weight:600}
+.btn+.btn{margin-top:10px}
+.row2{display:flex;gap:10px}.row2>*{flex:1}
+.chk{display:flex;gap:11px;align-items:flex-start;padding:14px;border:1.5px solid var(--line);
+  border-radius:12px;margin-bottom:10px;cursor:pointer;background:#fff}
+.chk input{width:22px;height:22px;accent-color:var(--pine);flex-shrink:0;margin-top:1px}
+.chk.on{border-color:var(--pine);background:var(--pine-soft)}
+.chk b{font-size:15px}.chk small{display:block;color:var(--sub);font-size:13px;margin-top:2px}
+.chk a{color:var(--pine);font-weight:600}
+.notice{background:var(--coral-soft);border:1.5px solid #EFC9BA;border-radius:12px;padding:16px;margin-bottom:14px}
+.notice b{color:var(--danger)}
+.notice p{font-size:14.5px;margin-top:6px}
+.err{color:var(--danger);font-size:14px;margin-top:8px;display:none}
+.err.on{display:block}
+.steps{counter-reset:s}
+.gstep{margin-bottom:26px}
+.gstep .gn{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.gstep .gn i{counter-increment:s;font-style:normal;width:28px;height:28px;border-radius:50%;
+  background:var(--pine);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;flex-shrink:0}
+.gstep .gn i::before{content:counter(s)}
+.gstep .gn b{font-size:17px}
+.gstep p{font-size:14.5px;color:var(--sub);margin-bottom:8px}
+.gstep .tip{background:var(--pine-soft);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--pine-deep);margin-bottom:8px}
+.gstep img{width:100%;border:1px solid var(--line);border-radius:12px;display:block}
+.gstep.hot{border:2px solid var(--coral);border-radius:14px;padding:14px;background:#fff}
+.gstep.hot .gn i{background:var(--coral)}
+.vcard{border:1.5px solid var(--line);border-radius:14px;background:#fff;padding:16px;margin-bottom:12px}
+.vcard h4{font-size:16.5px;margin-bottom:2px}
+.vcard .meta{font-size:13px;color:var(--sub);margin-bottom:10px}
+.slots{display:flex;gap:8px}
+.slot{flex:1;aspect-ratio:3/4;border:1.5px dashed var(--pine-line);border-radius:10px;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;
+  background:var(--pine-soft);overflow:hidden;font-size:12px;color:var(--pine-deep);text-align:center;padding:4px}
+.slot.done{border-style:solid;border-color:var(--pine)}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slot .tag{position:absolute;bottom:0;left:0;right:0;background:rgba(34,50,43,.72);color:#fff;
+  font-size:11px;padding:3px 0;text-align:center}
+.slot .busy{position:absolute;inset:0;background:rgba(255,255,255,.75);display:flex;align-items:center;
+  justify-content:center;font-size:12px;color:var(--pine-deep);font-weight:700}
+.statusbar{display:flex;align-items:center;gap:10px;background:var(--pine-soft);border-radius:12px;
+  padding:12px 14px;margin-bottom:16px}
+.statusbar .dot{width:10px;height:10px;border-radius:50%;background:var(--pine);flex-shrink:0}
+.statusbar span{font-size:14px;color:var(--pine-deep);font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(24,32,28,.5);display:none;z-index:50;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.sheet{background:#fff;width:100%;max-width:520px;max-height:88vh;border-radius:18px 18px 0 0;
+  display:flex;flex-direction:column;overflow:hidden}
+.sheet .sh{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.sheet .sh b{font-size:17px}
+.sheet .sh button{border:none;background:none;font-size:15px;color:var(--sub);cursor:pointer;font-family:inherit}
+.sheet .sb{overflow-y:auto;padding:14px 18px 30px}
+.mrow{padding:13px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.mrow b{font-size:15.5px}
+.mrow small{display:block;color:var(--sub);font-size:13px}
+.pill{display:inline-block;font-size:11.5px;background:var(--pine-soft);color:var(--pine-deep);
+  border-radius:99px;padding:2px 9px;margin-left:6px;vertical-align:middle}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.filters button{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:6px 13px;
+  font-size:13.5px;font-family:inherit;cursor:pointer;color:var(--sub)}
+.filters button.on{background:var(--pine);border-color:var(--pine);color:#fff;font-weight:600}
+.policy{font-size:13.5px;color:var(--sub);line-height:1.7}
+.policy h4{font-size:14.5px;color:var(--ink);margin:14px 0 4px}
+.done-badge{width:74px;height:74px;border-radius:50%;background:var(--pine-soft);display:flex;
+  align-items:center;justify-content:center;margin:30px auto 16px;font-size:34px}
+.center{text-align:center}
+footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:center;line-height:1.6}
+.linkbtn{background:none;border:none;color:var(--sub);font-size:13px;text-decoration:underline;
+  font-family:inherit;cursor:pointer;padding:8px}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="brand"><h1>MIRYANG IN THE STREET <span>· 여행자 가이드</span></h1></header>
+
+<!-- 0. 시작 / 로그인 -->
+<section class="screen" id="sc-entry">
+  <h2 class="title">밀양 여행,<br>잘 다녀오셨나요?</h2>
+  <p class="lead">밀양인더스트릿 혜택을 받으신 분의<br>방문 증빙을 접수하는 곳입니다.</p>
+  <img src="assets/guide/intro.jpg" alt="" style="width:100%;border-radius:14px;margin-bottom:18px" onerror="this.remove()">
+  <button class="btn p" onclick="show('sc-signup')">처음이에요 — 가입하기</button>
+  <button class="btn g" onclick="show('sc-login')">가입했어요 — 로그인</button>
+</section>
+
+<!-- 1. 가입 -->
+<section class="screen" id="sc-signup">
+  <h2 class="title">참가자 정보 입력</h2>
+  <p class="lead">혜택 신청 시 등록한 정보와 동일하게 적어주세요.</p>
+  <div class="card">
+    <label class="f">소속 (기업·단체명)</label>
+    <input class="t" id="su-org" placeholder="예: (주)밀양컴퍼니">
+    <label class="f">성함</label>
+    <input class="t" id="su-name" placeholder="예: 김밀양">
+    <label class="f">연락처</label>
+    <input class="t" id="su-phone" inputmode="numeric" placeholder="010-0000-0000" maxlength="13">
+    <label class="f">핀번호 6자리 (로그인에 사용해요)</label>
+    <input class="t" id="su-pin" inputmode="numeric" type="password" maxlength="6" placeholder="숫자 6자리">
+    <label class="f">핀번호 확인</label>
+    <input class="t" id="su-pin2" inputmode="numeric" type="password" maxlength="6" placeholder="한 번 더 입력">
+    <p class="err" id="su-err"></p>
+  </div>
+  <button class="btn p" id="su-go" onclick="signupConfirm()">입력 내용 확인</button>
+  <button class="btn line" onclick="show('sc-entry')">뒤로</button>
+</section>
+
+<!-- 2. 로그인 -->
+<section class="screen" id="sc-login">
+  <h2 class="title">다시 오셨네요</h2>
+  <p class="lead">가입 때 쓴 연락처와 핀번호로 이어서 진행합니다.</p>
+  <div class="card">
+    <label class="f">연락처</label>
+    <input class="t" id="li-phone" inputmode="numeric" placeholder="010-0000-0000" maxlength="13">
+    <label class="f">핀번호 6자리</label>
+    <input class="t" id="li-pin" inputmode="numeric" type="password" maxlength="6">
+    <p class="err" id="li-err"></p>
+  </div>
+  <button class="btn p" onclick="login()">로그인</button>
+  <button class="btn line" onclick="show('sc-entry')">뒤로</button>
+  <p class="center"><button class="linkbtn" onclick="alert('핀번호를 잊으셨다면 밀양문화관광재단 관광팀으로 연락 주세요. 임시 핀번호를 발급해 드립니다.')">핀번호를 잊었어요</button></p>
+</section>
+
+<!-- 3. 핀 변경(관리자 초기화 후) -->
+<section class="screen" id="sc-pin">
+  <h2 class="title">새 핀번호 설정</h2>
+  <p class="lead">임시 핀번호로 로그인하셨어요. 새 핀번호를 만들어 주세요.</p>
+  <div class="card">
+    <label class="f">새 핀번호 6자리</label>
+    <input class="t" id="np-1" inputmode="numeric" type="password" maxlength="6">
+    <label class="f">새 핀번호 확인</label>
+    <input class="t" id="np-2" inputmode="numeric" type="password" maxlength="6">
+    <p class="err" id="np-err"></p>
+  </div>
+  <button class="btn p" onclick="changePin()">저장하고 계속</button>
+</section>
+
+<!-- 4. 동의 -->
+<section class="screen" id="sc-consent">
+  <h2 class="title">동의가 필요해요</h2>
+  <p class="lead">증빙 접수를 위해 아래 내용을 확인해 주세요.</p>
+  <label class="chk" id="ck1w"><input type="checkbox" id="ck1" onchange="ckStyle()">
+    <span><b>개인정보 수집·이용 동의 <em style="color:var(--coral);font-style:normal">(필수)</em></b>
+    <small>소속·성함·연락처·증빙자료 / 정산 및 감사 규정에 따라 5년 보관 후 파기 · <a href="#" onclick="openPolicy();return false">전문 보기</a></small></span></label>
+  <label class="chk" id="ck2w"><input type="checkbox" id="ck2" onchange="ckStyle()">
+    <span><b>얼굴 사진 수집 동의 <em style="color:var(--coral);font-style:normal">(필수)</em></b>
+    <small>방문 사실 확인 목적으로만 사용하며 그 외 용도로 쓰지 않습니다</small></span></label>
+  <p class="err" id="ck-err">두 항목 모두 동의해야 진행할 수 있어요.</p>
+  <button class="btn p" onclick="goDuty()">다음</button>
+</section>
+
+<!-- 5. 증빙 의무 확인 -->
+<section class="screen" id="sc-duty">
+  <h2 class="title">증빙 제출 안내</h2>
+  <img src="assets/guide/duty.jpg" alt="" style="width:100%;border-radius:14px;margin-bottom:14px" onerror="this.remove()">
+  <div class="notice">
+    <b>꼭 확인해 주세요</b>
+    <p>밀양인더스트릿 혜택을 받으신 분은 <b>디지털관광주민증 등록업체(관광지·체험·식당·카페) 서로 다른 2곳 이상</b>을 이용하고 증빙자료를 제출해 주셔야 합니다.</p>
+    <p style="margin-top:8px">증빙자료를 제출하지 않으실 경우, <b>지원받으신 혜택 금액의 환수 등 불이익</b>이 발생할 수 있으며 향후 밀양시 관광지원 사업 참여가 제한될 수 있습니다.</p>
+  </div>
+  <label class="chk" id="ck3w"><input type="checkbox" id="ck3" onchange="ckStyle()">
+    <span><b>위 내용을 확인하였으며, 증빙 제출 의무에 동의합니다</b></span></label>
+  <p class="err" id="duty-err">확인 체크가 필요해요.</p>
+  <button class="btn p" onclick="saveConsents()">확인했어요</button>
+</section>
+
+<!-- 6. 주민증 분기 -->
+<section class="screen" id="sc-dtc">
+  <h2 class="title">디지털관광주민증,<br>이미 갖고 계신가요?</h2>
+  <p class="lead">등록업체 혜택을 받으려면 주민증이 필요해요.<br>발급은 무료이고 처음이라도 5~10분이면 됩니다.</p>
+  <button class="btn p" onclick="setDtc('has')">네, 이미 발급받았어요</button>
+  <button class="btn g" onclick="setDtc('guided')">아니요 — 발급 방법 알려주세요</button>
+</section>
+
+<!-- 7. 가입 안내 -->
+<section class="screen" id="sc-guide">
+  <h2 class="title">디지털관광주민증<br>이렇게 만들어요</h2>
+  <p class="lead">무료 · 만 14세 이상 누구나 · 처음이라면 5~10분</p>
+  <div class="steps">
+    <div class="gstep"><div class="gn"><i></i><b>앱 설치</b></div>
+      <p>플레이스토어 또는 앱스토어에서 <b>"대한민국 구석구석"</b>을 검색해 설치하세요.</p>
+      <div class="tip">"디지털관광주민증"으로 검색하면 광고 앱이 떠요. 꼭 <b>대한민국 구석구석</b>(한국관광공사)으로!</div>
+      <img src="assets/guide/step01.jpg" alt="플레이스토어 검색 화면" onerror="this.remove()"></div>
+    <div class="gstep"><div class="gn"><i></i><b>권한 안내는 확인만</b></div>
+      <p>앱을 처음 열면 접근 권한 안내가 나와요. 확인을 누르고, 알림·위치는 편한 대로 허용하면 됩니다.</p>
+      <img src="assets/guide/step02.jpg" alt="접근 권한 안내" onerror="this.remove()"></div>
+    <div class="gstep"><div class="gn"><i></i><b>투어원패스 로그인</b></div>
+      <p>로그인 안내가 뜨면 <b>투어원패스 로그인</b>을 누르고, 평소 쓰는 네이버·카카오 계정을 선택하세요.</p>
+      <img src="assets/guide/step03.jpg" alt="투어원패스 로그인" onerror="this.remove()">
+      <img src="assets/guide/step04.jpg" alt="SNS 계정 선택" style="margin-top:8px" onerror="this.remove()"></div>
+    <div class="gstep"><div class="gn"><i></i><b>계정 연결 동의</b></div>
+      <p>동의하기 → 가입신청 확인을 누르면 계정 연결이 끝납니다.</p>
+      <img src="assets/guide/step05.jpg" alt="네이버 동의" onerror="this.remove()"></div>
+    <div class="gstep hot"><div class="gn"><i></i><b>꼭 "플러스 회원"으로!</b></div>
+      <p>가입 종류 선택에서 반드시 <b>플러스 회원</b> 탭을 고르세요. 일반 회원으로 가입하면 관광주민증이 발급되지 않습니다.</p>
+      <img src="assets/guide/step06.jpg" alt="플러스 회원 선택" onerror="this.remove()"></div>
+    <div class="gstep"><div class="gn"><i></i><b>약관 동의 + 문자 인증</b></div>
+      <p>전체 동의 후, 본인확인은 <b>문자(SMS) 인증</b>이 가장 간편해요. 이름·정보를 입력하면 인증번호가 문자로 옵니다.</p>
+      <img src="assets/guide/step07.jpg" alt="약관 동의" onerror="this.remove()">
+      <img src="assets/guide/step08.jpg" alt="PASS 문자 인증" style="margin-top:8px" onerror="this.remove()"></div>
+    <div class="gstep"><div class="gn"><i></i><b>발급 지역에서 "밀양시" 선택</b></div>
+      <p>디지털 관광주민증 이용 동의 후, 지역 목록(가나다순)에서 <b>밀양시</b>를 체크하고 발급받기를 누르세요.</p>
+      <div class="tip">※ 주민등록상 밀양 시민은 밀양시가 선택되지 않아요(타지 여행자 전용 제도). 밀양인더스트릿 참가자분들은 모두 선택 가능합니다.</div>
+      <img src="assets/guide/step09.jpg" alt="지역 선택 화면" onerror="this.remove()">
+      <img src="assets/guide/step10.jpg" alt="발급받기" style="margin-top:8px" onerror="this.remove()"></div>
+    <div class="gstep"><div class="gn"><i></i><b>완료! 이렇게 쓰세요</b></div>
+      <p>발급이 완료되면 앱 메인의 <b>나의 통합 관광주민증 QR</b>을 등록업체에서 <b>결제 전에</b> 보여주세요. 할인·음료 제공 등 혜택이 바로 적용됩니다.</p>
+      <img src="assets/guide/step11.jpg" alt="발급 완료" onerror="this.remove()">
+      <img src="assets/guide/step12.jpg" alt="QR 사용" style="margin-top:8px" onerror="this.remove()"></div>
+  </div>
+  <button class="btn p" onclick="show('sc-home');refreshHome()">발급 완료 — 시작하기</button>
+</section>
+
+<!-- 8. 홈(증빙 대시보드) -->
+<section class="screen" id="sc-home">
+  <h2 class="title">방문 증빙</h2>
+  <div class="statusbar" id="home-status"><div class="dot"></div><span></span></div>
+  <div class="card" style="background:var(--pine-soft);border-color:var(--pine-line)">
+    <b style="font-size:15px">준비하실 것 (방문지마다)</b>
+    <p style="font-size:14px;color:var(--pine-deep);margin-top:6px">
+    ① 본인 얼굴이 나온 현장 사진 2장<br>
+    ② 영수증 사진 — <b>날짜와 상호가 보이게</b> 촬영<br>
+    <span style="font-size:13px">※ 카드 영수증 또는 카드단말기에서 출력된 현금 영수증만 인정됩니다. 계좌이체 내역·문자 캡처는 인정되지 않아요.</span></p>
+  </div>
+  <button class="btn line" style="margin-bottom:16px" onclick="openMerchants(null)">🔍 등록업체 49곳 둘러보기</button>
+  <div id="visit-list"></div>
+  <button class="btn g" id="add-visit" onclick="addVisit()">+ 방문지 추가</button>
+  <div id="submit-area" style="margin-top:18px"></div>
+  <p class="center"><button class="linkbtn" onclick="logout()">로그아웃</button></p>
+</section>
+
+<!-- 9. 제출 완료 -->
+<section class="screen" id="sc-done">
+  <div class="done-badge">✓</div>
+  <h2 class="title center">제출이 완료되었습니다</h2>
+  <p class="lead center">담당자 확인 후 보완이 필요하면<br>등록하신 연락처로 안내드려요.</p>
+  <div class="card"><div id="done-summary"></div></div>
+  <button class="btn line" onclick="unlockEdit()">제출 내용 수정하기</button>
+  <p class="center"><button class="linkbtn" onclick="logout()">로그아웃</button></p>
+</section>
+
+<!-- 10. 반려 -->
+<section class="screen" id="sc-rejected">
+  <h2 class="title">보완이 필요해요</h2>
+  <div class="notice"><b>반려 사유</b><p id="reject-reason"></p></div>
+  <p class="lead">사유를 확인하시고 자료를 수정해 다시 제출해 주세요.</p>
+  <button class="btn p" onclick="show('sc-home');refreshHome()">수정하러 가기</button>
+</section>
+
+<!-- 11. 접수 마감 -->
+<section class="screen" id="sc-closed">
+  <div class="done-badge">🌙</div>
+  <h2 class="title center">접수가 마감되었습니다</h2>
+  <p class="lead center">밀양인더스트릿에 함께해 주셔서 감사합니다.<br>문의: 밀양문화관광재단 관광팀</p>
+</section>
+
+<footer class="fine">밀양인더스트릿 여행자 가이드 · 밀양문화관광재단 관광팀<br>
+개인정보는 정산 및 감사 규정에 따라 5년 보관 후 파기됩니다 · <a href="#" onclick="openPolicy();return false" style="color:inherit">개인정보처리방침</a></footer>
+</div>
+
+<!-- 업체 선택/열람 모달 -->
+<div class="modal" id="m-merchants"><div class="sheet">
+  <div class="sh"><b id="mm-title">등록업체 찾기</b><button onclick="closeModal('m-merchants')">닫기</button></div>
+  <div class="sb">
+    <input class="t" id="mm-search" placeholder="업체명·지역 검색" oninput="renderMerchants()" style="margin-bottom:10px">
+    <div class="filters" id="mm-cats"></div>
+    <div class="filters" id="mm-regions"></div>
+    <div id="mm-list"></div>
+  </div>
+</div></div>
+
+<!-- 개인정보처리방침 모달 -->
+<div class="modal" id="m-policy"><div class="sheet">
+  <div class="sh"><b>개인정보 수집·이용 안내</b><button onclick="closeModal('m-policy')">닫기</button></div>
+  <div class="sb policy">
+    <h4>수집 주체</h4>밀양문화관광재단 (담당: 관광팀)
+    <h4>수집 항목</h4>소속, 성함, 연락처 / 방문 증빙자료(본인 얼굴이 포함된 현장 사진, 영수증 사진) / 만족도 조사 응답
+    <h4>수집·이용 목적</h4>밀양인더스트릿 혜택 수혜자의 방문 사실 확인, 사업 결과 정산 및 보고, 미제출자 확인 및 안내
+    <h4>보유 및 파기</h4>정산 및 감사 규정에 따라 수집일로부터 5년간 보관 후 지체 없이 파기합니다. 미제출에 따른 향후 사업 참여 제한 확인 목적의 최소 정보도 같은 기간 보관됩니다.
+    <h4>얼굴 사진에 관하여</h4>얼굴이 포함된 현장 사진은 방문 사실 확인 목적으로만 이용하며, 홍보 등 다른 목적으로 사용하지 않습니다.
+    <h4>동의 거부 권리</h4>동의를 거부하실 수 있으나, 이 경우 증빙 접수가 불가하며 혜택 환수 등 불이익이 발생할 수 있습니다.
+  </div>
+</div></div>
+
+<script>
+const C = window.MIRYANG_CONFIG;
+const sb = supabase.createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY);
+let TOKEN = localStorage.getItem('mis_token') || null;
+let ME = null, VISITS = [], MERCHANTS = [], SETTINGS = {};
+let mmMode = null; // null=열람, 'pick:visitId'=선택
+let mmCat = '전체', mmRegion = '전체';
+const SURVEY_QUESTIONS = []; // 설문 확정 시 여기에 문항 배열 삽입
+
+// ---------- 공통 ----------
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
+function closeModal(id){document.getElementById(id).classList.remove('on');}
+function openPolicy(){document.getElementById('m-policy').classList.add('on');}
+async function rpc(name, args){const {data,error} = await sb.rpc(name,args);
+  if(error){console.error(name,error);return {error:'network'};} return data;}
+function hyphen(el){el.value = el.value.replace(/\D/g,'').replace(/^(\d{3})(\d{0,4})(\d{0,4}).*/,
+  (m,a,b,c)=>c?`${a}-${b}-${c}`:b?`${a}-${b}`:a);}
+['su-phone','li-phone'].forEach(id=>{const el=document.getElementById(id);
+  el.addEventListener('input',()=>hyphen(el));});
+function ckStyle(){[['ck1','ck1w'],['ck2','ck2w'],['ck3','ck3w']].forEach(([c,w])=>{
+  const el=document.getElementById(c),wr=document.getElementById(w);
+  if(el&&wr)wr.classList.toggle('on',el.checked);});}
+
+// ---------- 가입/로그인 ----------
+function signupConfirm(){
+  const org=v('su-org'),name=v('su-name'),phone=v('su-phone'),pin=v('su-pin'),pin2=v('su-pin2');
+  const err=document.getElementById('su-err');err.classList.remove('on');
+  if(!org||!name){return showErr(err,'소속과 성함을 입력해 주세요.');}
+  if(phone.replace(/\D/g,'').length<10){return showErr(err,'연락처를 정확히 입력해 주세요.');}
+  if(!/^\d{6}$/.test(pin)){return showErr(err,'핀번호는 숫자 6자리예요.');}
+  if(pin!==pin2){return showErr(err,'핀번호 확인이 일치하지 않아요.');}
+  if(!confirm(`입력하신 정보가 맞는지 확인해 주세요.\n\n소속: ${org}\n성함: ${name}\n연락처: ${phone}\n\n이대로 가입할까요?`))return;
+  signup(org,name,phone,pin);
+}
+async function signup(org,name,phone,pin){
+  const err=document.getElementById('su-err');
+  const r=await rpc('fn_signup',{p_phone:phone,p_name:name,p_org:org,p_pin:pin});
+  if(r.error==='phone_exists')return showErr(err,'이미 가입된 연락처예요. 로그인으로 진행해 주세요.');
+  if(r.error)return showErr(err,'가입에 실패했어요. 잠시 후 다시 시도해 주세요.');
+  TOKEN=r.token;localStorage.setItem('mis_token',TOKEN);
+  ME={status:'joined'};show('sc-consent');
+}
+async function login(){
+  const err=document.getElementById('li-err');err.classList.remove('on');
+  const r=await rpc('fn_login',{p_phone:v('li-phone'),p_pin:v('li-pin')});
+  if(r.error==='not_found')return showErr(err,'가입 내역이 없는 연락처예요.');
+  if(r.error==='wrong_pin')return showErr(err,'핀번호가 맞지 않아요.');
+  if(r.error)return showErr(err,'로그인에 실패했어요. 잠시 후 다시 시도해 주세요.');
+  TOKEN=r.token;localStorage.setItem('mis_token',TOKEN);
+  if(r.must_change_pin){show('sc-pin');return;}
+  await loadMe(true);
+}
+async function changePin(){
+  const err=document.getElementById('np-err');err.classList.remove('on');
+  const p1=v('np-1'),p2=v('np-2');
+  if(!/^\d{6}$/.test(p1))return showErr(err,'숫자 6자리로 입력해 주세요.');
+  if(p1!==p2)return showErr(err,'확인 번호가 일치하지 않아요.');
+  const r=await rpc('fn_change_pin',{p_token:TOKEN,p_new_pin:p1});
+  if(r.error)return showErr(err,'저장에 실패했어요. 다시 시도해 주세요.');
+  await loadMe(true);
+}
+function logout(){localStorage.removeItem('mis_token');TOKEN=null;ME=null;show('sc-entry');}
+function v(id){return document.getElementById(id).value.trim();}
+function showErr(el,msg){el.textContent=msg;el.classList.add('on');}
+
+// ---------- 상태 복귀 라우팅 ----------
+async function loadMe(route){
+  const r=await rpc('fn_me',{p_token:TOKEN});
+  if(r.error){logout();return;}
+  ME=r.participant;VISITS=r.visits;
+  if(!route)return;
+  if(SETTINGS.service_open==='false'&&ME.status!=='rejected'){show('sc-closed');return;}
+  if(!ME.consent_privacy||!ME.consent_photo){show('sc-consent');return;}
+  if(!ME.consent_duty){show('sc-duty');return;}
+  if(!ME.dtc_status){show('sc-dtc');return;}
+  if(ME.status==='submitted'||ME.status==='approved'){renderDone();show('sc-done');return;}
+  if(ME.status==='rejected'){document.getElementById('reject-reason').textContent=ME.reject_reason||'담당자에게 문의해 주세요.';show('sc-rejected');return;}
+  show('sc-home');refreshHome();
+}
+
+// ---------- 동의 흐름 ----------
+function goDuty(){
+  const err=document.getElementById('ck-err');
+  if(!document.getElementById('ck1').checked||!document.getElementById('ck2').checked){err.classList.add('on');return;}
+  err.classList.remove('on');show('sc-duty');
+}
+async function saveConsents(){
+  const err=document.getElementById('duty-err');
+  if(!document.getElementById('ck3').checked){err.classList.add('on');return;}
+  err.classList.remove('on');
+  const r=await rpc('fn_set_consents',{p_token:TOKEN,p_privacy:true,p_photo:true,p_duty:true});
+  if(r.error){alert('저장에 실패했어요. 다시 시도해 주세요.');return;}
+  show('sc-dtc');
+}
+async function setDtc(s){
+  const r=await rpc('fn_set_dtc',{p_token:TOKEN,p_status:s});
+  if(r.error){alert('저장에 실패했어요. 다시 시도해 주세요.');return;}
+  if(s==='has'){show('sc-home');refreshHome();}else{show('sc-guide');}
+}
+
+// ---------- 홈/방문지 ----------
+async function refreshHome(){
+  await loadMe(false);
+  const dl = ME.deadline_override || (ME.status==='rejected'?SETTINGS.resubmission_deadline:SETTINGS.submission_deadline);
+  document.querySelector('#home-status span').textContent =
+    `서로 다른 등록업체 2곳 이상 · 제출 마감 ${dl||'-'}`;
+  const list=document.getElementById('visit-list');list.innerHTML='';
+  if(VISITS.length===0){await createVisit();await createVisit();return;}
+  VISITS.forEach((vi,i)=>list.appendChild(visitCard(vi,i)));
+  renderSubmit();
+}
+async function createVisit(){
+  const r=await rpc('fn_upsert_visit',{p_token:TOKEN,p_visit:{merchant_name:'(업체 미선택 '+Math.random().toString(36).slice(2,7)+')'}});
+  if(!r.error){await refreshHome();}
+}
+function addVisit(){createVisit();}
+function visitCard(vi,i){
+  const d=document.createElement('div');d.className='vcard';
+  const picked=!vi.merchant_name.startsWith('(업체 미선택');
+  d.innerHTML=`<h4>방문지 ${i+1} ${picked?'· '+esc(vi.merchant_name):''}</h4>
+    <div class="meta">${picked?esc(vi.merchant_category||'')+' · '+esc(vi.merchant_region||''):'등록업체를 먼저 선택해 주세요'}</div>
+    <button class="btn line" style="padding:10px;font-size:14px;margin-bottom:10px"
+      onclick="openMerchants('${vi.id}')">${picked?'업체 변경':'등록업체 선택'}</button>
+    <div class="slots">
+      ${slot(vi,'photo1_path','얼굴 사진 1','face')}
+      ${slot(vi,'photo2_path','얼굴 사진 2','face')}
+      ${slot(vi,'receipt1_path','영수증','receipt')}
+    </div>
+    <p class="center" style="margin-top:8px"><button class="linkbtn" onclick="delVisit('${vi.id}')">이 방문지 삭제</button></p>`;
+  return d;
+}
+function slot(vi,field,label,kind){
+  const has=!!vi[field];
+  return `<div class="slot ${has?'done':''}" onclick="pickFile('${vi.id}','${field}','${kind}')">
+    ${has?`<span style="font-size:22px">✅</span><span>업로드 완료</span><div class="tag">${label} · 다시 찍기</div>`
+        :`<span style="font-size:22px">${kind==='receipt'?'🧾':'📷'}</span><span>${label}<br>탭해서 첨부</span>`}
+  </div>`;
+}
+async function delVisit(id){
+  if(VISITS.length<=2){alert('방문지는 최소 2곳이 필요해요. 내용만 바꿔서 사용해 주세요.');return;}
+  if(!confirm('이 방문지의 사진·영수증이 함께 삭제됩니다. 삭제할까요?'))return;
+  await rpc('fn_delete_visit',{p_token:TOKEN,p_visit_id:id});refreshHome();
+}
+
+// ---------- 파일 업로드 (압축 이원화) ----------
+function pickFile(visitId,field,kind){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=async()=>{if(inp.files[0])await handleFile(inp.files[0],visitId,field,kind);};
+  inp.click();
+}
+async function handleFile(file,visitId,field,kind){
+  try{
+    const blob=await compress(file, kind==='receipt'?{max:2000,q:0.9}:{max:1280,q:0.72});
+    const path=`${visitId}/${field}_${Date.now()}.jpg`;
+    const busy=showBusy();
+    const {error}=await sb.storage.from(C.STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg',upsert:true});
+    busy.remove();
+    if(error){alert('업로드에 실패했어요. 통신 상태를 확인하고 다시 시도해 주세요.');return;}
+    const vi=VISITS.find(x=>x.id===visitId);vi[field]=path;
+    await rpc('fn_upsert_visit',{p_token:TOKEN,p_visit:vi});
+    refreshHome();
+  }catch(e){alert('이미지를 처리하지 못했어요. 다른 사진으로 시도해 주세요.');}
+}
+function compress(file,{max,q}){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(Math.max(w,h)>max){const r=max/Math.max(w,h);w=Math.round(w*r);h=Math.round(h*r);}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      cv.toBlob(b=>b?res(b):rej(),'image/jpeg',q);
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror=()=>rej(new Error('decode'));
+    img.src=URL.createObjectURL(file);
+  });
+}
+function showBusy(){const d=document.createElement('div');
+  d.style.cssText='position:fixed;inset:0;background:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;z-index:99;font-weight:700;color:var(--pine-deep)';
+  d.textContent='업로드 중...';document.body.appendChild(d);return d;}
+
+// ---------- 제출 ----------
+function visitReady(vi){return !vi.merchant_name.startsWith('(업체 미선택')&&vi.photo1_path&&vi.photo2_path&&vi.receipt1_path;}
+function renderSubmit(){
+  const area=document.getElementById('submit-area');
+  const ready=VISITS.filter(visitReady).length;
+  const ok=ready>=2;
+  area.innerHTML=`<p style="font-size:14px;color:var(--sub);margin-bottom:10px;text-align:center">
+    완료된 방문지 ${ready} / 2곳</p>
+    <button class="btn p" ${ok?'':'disabled'} onclick="submitAll()">${ok?'제출하기':'2곳을 완성하면 제출할 수 있어요'}</button>`;
+}
+async function submitAll(){
+  if(SURVEY_QUESTIONS.length>0){/* 설문 확정 시 이 자리에서 설문 화면으로 이동 */}
+  if(!confirm('제출할까요? 제출 후에도 마감 전까지는 수정할 수 있어요.'))return;
+  const r=await rpc('fn_submit',{p_token:TOKEN,p_survey:null});
+  if(r.error==='need_two_visits')return alert('사진과 영수증이 모두 첨부된 방문지가 2곳 이상 필요해요.');
+  if(r.error==='deadline_passed')return alert('제출 기한이 지났어요. 밀양문화관광재단 관광팀으로 문의해 주세요.');
+  if(r.error==='closed')return show('sc-closed');
+  if(r.error)return alert('제출에 실패했어요. 다시 시도해 주세요.');
+  await loadMe(false);renderDone();show('sc-done');
+}
+function renderDone(){
+  const names=VISITS.filter(visitReady).map(x=>x.merchant_name);
+  document.getElementById('done-summary').innerHTML=
+    `<b style="font-size:15px">${esc(ME.name)}님 (${esc(ME.org)})</b>
+     <p style="font-size:14px;color:var(--sub);margin-top:6px">제출 방문지: ${names.map(esc).join(', ')||'-'}<br>
+     제출 시각: ${ME.submitted_at?new Date(ME.submitted_at).toLocaleString('ko-KR'):'-'}</p>`;
+}
+async function unlockEdit(){
+  if(!confirm('수정 후에는 다시 제출하기를 눌러야 접수가 완료돼요. 계속할까요?'))return;
+  ME.status='drafting';show('sc-home');refreshHome();
+}
+
+// ---------- 등록업체 ----------
+async function loadMerchants(){
+  const res=await fetch('merchants.csv');const text=await res.text();
+  MERCHANTS=Papa.parse(text,{header:true,skipEmptyLines:true}).data;
+}
+function openMerchants(visitId){
+  mmMode=visitId;mmCat='전체';mmRegion='전체';
+  document.getElementById('mm-title').textContent=visitId?'방문한 업체 선택':'등록업체 찾기';
+  document.getElementById('mm-search').value='';
+  buildFilters();renderMerchants();
+  document.getElementById('m-merchants').classList.add('on');
+}
+function buildFilters(){
+  const cats=['전체',...new Set(MERCHANTS.map(m=>m['분류']))];
+  const regs=['전체',...new Set(MERCHANTS.map(m=>m['행정구역']))].sort((a,b)=>a==='전체'?-1:b==='전체'?1:a.localeCompare(b,'ko'));
+  document.getElementById('mm-cats').innerHTML=cats.map(c=>
+    `<button class="${c===mmCat?'on':''}" onclick="mmCat='${c}';buildFilters();renderMerchants()">${c}</button>`).join('');
+  document.getElementById('mm-regions').innerHTML=regs.map(r=>
+    `<button class="${r===mmRegion?'on':''}" onclick="mmRegion='${r}';buildFilters();renderMerchants()">${r}</button>`).join('');
+}
+function renderMerchants(){
+  const q=document.getElementById('mm-search').value.trim();
+  const used=new Set(VISITS.map(x=>x.merchant_name));
+  const rows=MERCHANTS.filter(m=>
+    (mmCat==='전체'||m['분류']===mmCat)&&(mmRegion==='전체'||m['행정구역']===mmRegion)&&
+    (!q||m['업체명'].includes(q)||m['행정구역'].includes(q)));
+  document.getElementById('mm-list').innerHTML=rows.map(m=>{
+    const cur=(VISITS.find(x=>x.id===mmMode)||{}).merchant_name;
+    const taken=!!mmMode&&used.has(m['업체명'])&&cur!==m['업체명'];
+    return `<div class="mrow" style="${taken?'opacity:.4':''}" onclick="${taken?`alert('이미 다른 방문지로 선택한 업체예요. 서로 다른 업체 2곳이 필요합니다.')`:mmMode?`pickMerchant('${esc(m['업체명'])}')`:''}">
+      <b>${esc(m['업체명'])}</b><span class="pill">${esc(m['분류'])}</span>
+      <small>${esc(m['행정구역'])} · ${esc(m['혜택'])}${taken?' · 이미 선택됨':''}</small></div>`;
+  }).join('')||'<p style="color:var(--sub);padding:20px;text-align:center">검색 결과가 없어요.</p>';
+}
+async function pickMerchant(name){
+  const m=MERCHANTS.find(x=>x['업체명']===name);const vi=VISITS.find(x=>x.id===mmMode);
+  vi.merchant_name=m['업체명'];vi.merchant_category=m['분류'];vi.merchant_region=m['행정구역'];
+  const r=await rpc('fn_upsert_visit',{p_token:TOKEN,p_visit:vi});
+  if(r.error==='duplicate_merchant'){alert('이미 다른 방문지로 선택한 업체예요. 서로 다른 업체 2곳이 필요합니다.');return;}
+  closeModal('m-merchants');refreshHome();
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ---------- 초기화 ----------
+(async function init(){
+  try{const {data}=await sb.from('app_settings').select('*');
+    (data||[]).forEach(r=>SETTINGS[r.key]=r.value);}catch(e){}
+  await loadMerchants();
+  if(SETTINGS.service_open==='false'){show('sc-closed');return;}
+  if(TOKEN){await loadMe(true);}else{show('sc-entry');}
+})();
+</script>
+</body>
+</html>
