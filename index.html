@@ -48,6 +48,11 @@ input.t:focus{outline:none;border-color:var(--pine)}
 .chk b{font-size:15px}.chk small{display:block;color:var(--sub);font-size:13px;margin-top:2px}
 .chk a{color:var(--pine);font-weight:600}
 .notice{background:var(--coral-soft);border:1.5px solid #EFC9BA;border-radius:12px;padding:16px;margin-bottom:14px}
+.duty-hero{border-radius:14px;overflow:hidden;margin-bottom:14px;
+  background:url('assets/guide/duty.jpg') center/cover;padding:26px 16px}
+.duty-panel{background:rgba(255,252,250,.92);border:1.5px solid #EFC9BA;border-radius:12px;
+  padding:16px;backdrop-filter:blur(2px)}
+.duty-panel p{font-size:14.5px;margin-top:6px}
 .notice b{color:var(--danger)}
 .notice p{font-size:14.5px;margin-top:6px}
 .err{color:var(--danger);font-size:14px;margin-top:8px;display:none}
@@ -115,8 +120,8 @@ footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:cente
 
 <!-- 0. 시작 / 로그인 -->
 <section class="screen" id="sc-entry">
-  <h2 class="title">밀양 여행,<br>잘 다녀오셨나요?</h2>
-  <p class="lead">밀양인더스트릿 혜택을 받으신 분의<br>방문 증빙을 접수하는 곳입니다.</p>
+  <h2 class="title">밀양 여행을<br>더욱 풍성하게</h2>
+  <p class="lead">밀양인더스트릿 참여자를 위한 가이드입니다.<br>주민증 발급 안내부터 방문 증빙까지 여기서 진행하세요.</p>
   <img src="assets/guide/intro.jpg" alt="" style="width:100%;border-radius:14px;margin-bottom:18px" onerror="this.remove()">
   <button class="btn p" onclick="show('sc-signup')">처음이에요 — 가입하기</button>
   <button class="btn g" onclick="show('sc-login')">가입했어요 — 로그인</button>
@@ -190,11 +195,12 @@ footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:cente
 <!-- 5. 증빙 의무 확인 -->
 <section class="screen" id="sc-duty">
   <h2 class="title">증빙 제출 안내</h2>
-  <img src="assets/guide/duty.jpg" alt="" style="width:100%;border-radius:14px;margin-bottom:14px" onerror="this.remove()">
-  <div class="notice">
-    <b>꼭 확인해 주세요</b>
-    <p>밀양인더스트릿 혜택을 받으신 분은 <b>디지털관광주민증 등록업체(관광지·체험·식당·카페) 서로 다른 2곳 이상</b>을 이용하고 증빙자료를 제출해 주셔야 합니다.</p>
-    <p style="margin-top:8px">증빙자료를 제출하지 않으실 경우, <b>지원받으신 혜택 금액의 환수 등 불이익</b>이 발생할 수 있으며 향후 밀양시 관광지원 사업 참여가 제한될 수 있습니다.</p>
+  <div class="duty-hero">
+    <div class="duty-panel">
+      <b style="color:var(--danger)">꼭 확인해 주세요</b>
+      <p>밀양인더스트릿 혜택을 받으신 분은 <b>디지털관광주민증 등록업체(관광지·체험·식당·카페) 서로 다른 2곳 이상</b>을 이용하고 증빙자료를 제출해 주셔야 합니다.</p>
+      <p style="margin-top:8px">증빙자료를 제출하지 않으실 경우, <b>지원받으신 혜택 금액의 환수 등 불이익</b>이 발생할 수 있으며 향후 밀양시 관광지원 사업 참여가 제한될 수 있습니다.</p>
+    </div>
   </div>
   <label class="chk" id="ck3w"><input type="checkbox" id="ck3" onchange="ckStyle()">
     <span><b>위 내용을 확인하였으며, 증빙 제출 의무에 동의합니다</b></span></label>
@@ -249,6 +255,15 @@ footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:cente
   <button class="btn p" onclick="show('sc-home');refreshHome()">발급 완료 — 시작하기</button>
 </section>
 
+<!-- 7.5 재접속 복귀 선택 -->
+<section class="screen" id="sc-resume">
+  <h2 class="title">다시 오셨네요!</h2>
+  <p class="lead">어디부터 이어갈까요?</p>
+  <button class="btn p" onclick="show('sc-home');refreshHome()">방문 증빙 작성하기</button>
+  <button class="btn g" onclick="show('sc-guide')">디지털관광주민증 발급 안내 보기</button>
+  <p class="center" style="margin-top:8px"><button class="linkbtn" onclick="logout()">로그아웃</button></p>
+</section>
+
 <!-- 8. 홈(증빙 대시보드) -->
 <section class="screen" id="sc-home">
   <h2 class="title">방문 증빙</h2>
@@ -260,7 +275,8 @@ footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:cente
     ② 영수증 사진 — <b>날짜와 상호가 보이게</b> 촬영<br>
     <span style="font-size:13px">※ 카드 영수증 또는 카드단말기에서 출력된 현금 영수증만 인정됩니다. 계좌이체 내역·문자 캡처는 인정되지 않아요.</span></p>
   </div>
-  <button class="btn line" style="margin-bottom:16px" onclick="openMerchants(null)">🔍 등록업체 49곳 둘러보기</button>
+  <button class="btn line" style="margin-bottom:6px" onclick="openMerchants(null)">🔍 디지털관광주민증 등록업체 둘러보기</button>
+  <p class="center" style="margin-bottom:12px"><button class="linkbtn" onclick="show('sc-guide')">디지털관광주민증 발급 안내 다시 보기</button></p>
   <div id="visit-list"></div>
   <button class="btn g" id="add-visit" onclick="addVisit()">+ 방문지 추가</button>
   <div id="submit-area" style="margin-top:18px"></div>
@@ -398,7 +414,7 @@ async function loadMe(route){
   if(!ME.dtc_status){show('sc-dtc');return;}
   if(ME.status==='submitted'||ME.status==='approved'){renderDone();show('sc-done');return;}
   if(ME.status==='rejected'){document.getElementById('reject-reason').textContent=ME.reject_reason||'담당자에게 문의해 주세요.';show('sc-rejected');return;}
-  show('sc-home');refreshHome();
+  show('sc-resume');
 }
 
 // ---------- 동의 흐름 ----------
@@ -426,7 +442,7 @@ async function refreshHome(){
   await loadMe(false);
   const dl = ME.deadline_override || (ME.status==='rejected'?SETTINGS.resubmission_deadline:SETTINGS.submission_deadline);
   document.querySelector('#home-status span').textContent =
-    `서로 다른 등록업체 2곳 이상 · 제출 마감 ${dl||'-'}`;
+    `현장에서 바로 사진·영수증을 찍어 그때그때 업로드하는 게 좋아요 (제출 마감: 여행 후 3일 이내)`;
   const list=document.getElementById('visit-list');list.innerHTML='';
   if(VISITS.length===0){await createVisit();await createVisit();return;}
   VISITS.forEach((vi,i)=>list.appendChild(visitCard(vi,i)));
@@ -509,9 +525,20 @@ function renderSubmit(){
   const area=document.getElementById('submit-area');
   const ready=VISITS.filter(visitReady).length;
   const ok=ready>=2;
-  area.innerHTML=`<p style="font-size:14px;color:var(--sub);margin-bottom:10px;text-align:center">
-    완료된 방문지 ${ready} / 2곳</p>
-    <button class="btn p" ${ok?'':'disabled'} onclick="submitAll()">${ok?'제출하기':'2곳을 완성하면 제출할 수 있어요'}</button>`;
+  if(ok){
+    area.innerHTML=`<p style="font-size:14px;color:var(--sub);margin-bottom:10px;text-align:center">
+      완료된 방문지 <b>${ready}곳</b><br>더 많이 다녀오셨다면 방문지를 추가해 함께 제출하시길 추천해요!</p>
+      <button class="btn p" onclick="submitAll()">${ready}곳 제출하기</button>`;
+  }else{
+    area.innerHTML=`<p style="font-size:14px;color:var(--sub);margin-bottom:10px;text-align:center">
+      완료된 방문지 <b>${ready}곳</b> · 최소 2곳부터 제출할 수 있어요</p>
+      <button class="btn g" onclick="tempSave()">여기까지 임시저장</button>
+      <p style="font-size:12.5px;color:var(--sub);text-align:center;margin-top:8px">
+      사진을 올릴 때마다 자동으로도 저장돼요. 다음 방문지에서 로그인하면 이어서 작성됩니다.</p>`;
+  }
+}
+function tempSave(){
+  alert('여기까지 저장되었어요!\n\n다음 방문지에 다녀오신 뒤 같은 연락처와 핀번호로 로그인하면 이어서 올릴 수 있습니다.');
 }
 async function submitAll(){
   if(SURVEY_QUESTIONS.length>0){/* 설문 확정 시 이 자리에서 설문 화면으로 이동 */}
@@ -560,7 +587,8 @@ function renderMerchants(){
   const used=new Set(VISITS.map(x=>x.merchant_name));
   const rows=MERCHANTS.filter(m=>
     (mmCat==='전체'||m['분류']===mmCat)&&(mmRegion==='전체'||m['행정구역']===mmRegion)&&
-    (!q||m['업체명'].includes(q)||m['행정구역'].includes(q)));
+    (!q||m['업체명'].includes(q)||m['행정구역'].includes(q)))
+    .sort((a,b)=>a['업체명'].localeCompare(b['업체명'],'ko'));
   document.getElementById('mm-list').innerHTML=rows.map(m=>{
     const cur=(VISITS.find(x=>x.id===mmMode)||{}).merchant_name;
     const taken=!!mmMode&&used.has(m['업체명'])&&cur!==m['업체명'];
