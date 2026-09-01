@@ -470,8 +470,9 @@ function visitCard(vi,i){
 }
 function slot(vi,field,label,kind){
   const has=!!vi[field];
+  const thumb=has?localStorage.getItem('thv_'+vi[field]):null;
   return `<div class="slot ${has?'done':''}" onclick="pickFile('${vi.id}','${field}','${kind}')">
-    ${has?`<span style="font-size:22px">✅</span><span>업로드 완료</span><div class="tag">${label} · 다시 찍기</div>`
+    ${has?`${thumb?`<img src="${thumb}" alt="">`:`<span style="font-size:22px">✅</span><span>업로드 완료</span>`}<div class="tag">${label} · 다시 찍기</div>`
         :`<span style="font-size:22px">${kind==='receipt'?'🧾':'📷'}</span><span>${label}<br>탭해서 첨부</span>`}
   </div>`;
 }
@@ -495,6 +496,13 @@ async function handleFile(file,visitId,field,kind){
     const {error}=await sb.storage.from(C.STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg'});
     busy.remove();
     if(error){alert('업로드에 실패했어요. 통신 상태를 확인하고 다시 시도해 주세요.\n\n(오류: '+(error.message||error.error||'알 수 없음')+')');return;}
+    try{
+      const tb=await compress(file,{max:320,q:0.6});
+      const dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(tb);});
+      const vi0=VISITS.find(x=>x.id===visitId);
+      if(vi0&&vi0[field])localStorage.removeItem('thv_'+vi0[field]);
+      localStorage.setItem('thv_'+path,dataUrl);
+    }catch(e){}
     const vi=VISITS.find(x=>x.id===visitId);vi[field]=path;
     await rpc('fn_upsert_visit',{p_token:TOKEN,p_visit:vi});
     refreshHome();
