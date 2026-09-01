@@ -105,7 +105,7 @@ tr.row{cursor:pointer}tr.row:hover{background:var(--pine-soft)}
       <button class="bl" onclick="loadAll()">↻ 새로고침</button>
     </div>
     <table>
-      <thead><tr><th>상태</th><th>성함</th><th>소속</th><th>연락처</th><th>방문지</th><th>제출일시</th></tr></thead>
+      <thead><tr><th style="width:34px"><input type="checkbox" id="sel-all" onchange="toggleAll(this.checked)"></th><th>상태</th><th>성함</th><th>소속</th><th>연락처</th><th>방문지</th><th>제출일시</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
     <p class="muted" id="count" style="margin-top:10px"></p>
@@ -180,22 +180,40 @@ function renderStats(){
   document.getElementById('stats').innerHTML = items.map(([k,l,n])=>
     `<div class="stat ${FILTER===k?'on':''}" onclick="FILTER=${k===null?'null':`'${k}'`};renderStats();renderTable()"><b>${n}</b><span>${l}</span></div>`).join('');
 }
-function renderTable(){
+let SEL = new Set();
+function toggleSel(id, on, ev){ ev.stopPropagation(); on?SEL.add(id):SEL.delete(id); updateSelInfo(); }
+function toggleAll(on){
   const q = document.getElementById('q').value.trim();
-  let rows = PARTS.filter(p=>{
+  visibleRows().forEach(p=>on?SEL.add(p.id):SEL.delete(p.id));
+  renderTable();
+}
+function visibleRows(){
+  const q = document.getElementById('q').value.trim();
+  return PARTS.filter(p=>{
     if(FILTER==='drafting') { if(!['drafting','joined'].includes(p.status)) return false; }
     else if(FILTER && p.status!==FILTER) return false;
     if(q && !(p.name.includes(q)||p.org.includes(q)||p.phone.includes(q.replace(/\D/g,'')))) return false;
     return true;
   });
+}
+function updateSelInfo(){
+  document.getElementById('count').textContent = `${visibleRows().length}명 표시 중` + (SEL.size?` · ${SEL.size}명 선택됨 (다운로드는 선택 인원만 저장돼요)`:` · 선택 없음 (다운로드 시 전체 저장)`);
+}
+function renderTable(){
+  const rows = visibleRows();
   document.getElementById('tbody').innerHTML = rows.map(p=>`
     <tr class="row" onclick="openDetail('${p.id}')">
+      <td onclick="event.stopPropagation()"><input type="checkbox" ${SEL.has(p.id)?'checked':''} onchange="toggleSel('${p.id}',this.checked,event)"></td>
       <td><span class="badge b-${p.status}">${ST_LABEL[p.status]||p.status}</span></td>
       <td><b>${esc(p.name)}</b></td><td>${esc(p.org)}</td><td>${fmtPhone(p.phone)}</td>
       <td>${readyVisits(p.id).length} / ${visitsOf(p.id).length}곳</td>
       <td class="muted">${p.submitted_at ? new Date(p.submitted_at).toLocaleString('ko-KR') : '-'}</td>
-    </tr>`).join('') || '<tr><td colspan="6" class="muted" style="padding:24px;text-align:center">해당하는 참가자가 없습니다.</td></tr>';
-  document.getElementById('count').textContent = `${rows.length}명 표시 중`;
+    </tr>`).join('') || '<tr><td colspan="7" class="muted" style="padding:24px;text-align:center">해당하는 참가자가 없습니다.</td></tr>';
+  updateSelInfo();
+}
+function exportTargets(){
+  const t = SEL.size ? PARTS.filter(p=>SEL.has(p.id)) : PARTS;
+  return t;
 }
 
 // ---------- 상세 ----------
@@ -283,38 +301,51 @@ async function removeParticipant(){
 // ---------- 내보내기 ----------
 function ymd(d){ const t=new Date(d); return `${t.getFullYear()}${String(t.getMonth()+1).padStart(2,'0')}${String(t.getDate()).padStart(2,'0')}`; }
 async function exportExcel(){
+  const targets = exportTargets();
+  if(!confirm(`${SEL.size?`선택한 ${targets.length}명`:`전체 ${targets.length}명`}의 현황을 엑셀로 내려받습니다. 진행할까요?`)) return;
+  const maxV = Math.max(1, ...targets.map(p=>visitsOf(p.id).length));
   const rows = [];
-  for(const p of PARTS){
+  for(const p of targets){
     const vs = visitsOf(p.id);
-    const links = [];
-    for(const [i,vi] of vs.entries()){
-      for(const f of ['photo1_path','photo2_path','receipt1_path','receipt2_path']){
-        if(vi[f]) links.push(`[방문지${i+1}/${f.startsWith('receipt')?'영수증':'사진'}] `+ await signed(vi[f], 60*60*24*7));
-      }
-    }
-    rows.push({
+    const row = {
       '상태': ST_LABEL[p.status]||p.status, '성함': p.name, '소속': p.org, '연락처': fmtPhone(p.phone),
       '가입일': new Date(p.created_at).toLocaleDateString('ko-KR'),
       '제출일시': p.submitted_at? new Date(p.submitted_at).toLocaleString('ko-KR') : '',
-      '방문지수(완료/전체)': `${readyVisits(p.id).length}/${vs.length}`,
-      '방문지 목록': vs.map(v=>v.merchant_name).filter(n=>!String(n).startsWith('(업체 미선택')).join(', '),
       '반려사유': p.reject_reason||'', '개별마감': p.deadline_override||'',
-      '이미지 링크(7일 유효)': links.join('\n'),
-    });
+    };
+    for(let i=0;i<maxV;i++){
+      const vi = vs[i]; const n = i+1;
+      const picked = vi && !String(vi.merchant_name).startsWith('(업체 미선택');
+      row[`방문지${n} 업체명`] = picked ? vi.merchant_name : '';
+      row[`방문지${n} 분류/지역`] = picked ? `${vi.merchant_category||''}/${vi.merchant_region||''}` : '';
+      row[`방문지${n} 업로드일`] = vi && (vi.photo1_path||vi.receipt1_path) ? new Date(vi.updated_at||vi.created_at).toLocaleDateString('ko-KR') : '';
+      const links = [];
+      if(vi) for(const [f,l] of [['photo1_path','사진1'],['photo2_path','사진2'],['receipt1_path','영수증1'],['receipt2_path','영수증2']])
+        if(vi[f]) links.push(`[${l}] `+ await signed(vi[f], 60*60*24*7));
+      row[`방문지${n} 이미지링크(7일)`] = links.join('\n');
+    }
+    rows.push(row);
   }
   const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{wch:8},{wch:10},{wch:18},{wch:14},{wch:11},{wch:18},{wch:14},{wch:30},{wch:24},{wch:11},{wch:60}];
+  const cols=[{wch:8},{wch:10},{wch:18},{wch:14},{wch:11},{wch:18},{wch:24},{wch:11}];
+  for(let i=0;i<maxV;i++) cols.push({wch:20},{wch:14},{wch:12},{wch:55});
+  ws['!cols']=cols;
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '참가자');
-  XLSX.writeFile(wb, `밀양인더스트릿_제출현황_${ymd(new Date())}.xlsx`);
+  XLSX.writeFile(wb, `밀양인더스트릿_제출현황_${ymd(new Date())}${SEL.size?'_선택'+targets.length+'명':''}.xlsx`);
 }
 async function exportZip(){
-  if(!confirm('제출된 이미지 전체를 ZIP으로 내려받습니다. 인원이 많으면 수 분 걸릴 수 있어요. 진행할까요?')) return;
+  const targets = exportTargets();
+  if(!confirm(`${SEL.size?`선택한 ${targets.length}명`:`전체 ${targets.length}명`}의 이미지를 ZIP으로 내려받습니다. 인원이 많으면 수 분 걸릴 수 있어요. 진행할까요?`)) return;
   const zip = new JSZip();
-  let n = 0;
-  for(const p of PARTS){
+  let n = 0, idx = 0;
+  for(const p of targets){
+    idx++;
+    const folder = `${String(idx).padStart(3,'0')}_${p.name.replace(/[\\/:*?"<>|]/g,'')}`;
     const vs = visitsOf(p.id);
     for(const [i,vi] of vs.entries()){
+      const picked = !String(vi.merchant_name).startsWith('(업체 미선택');
+      const biz = picked ? '_'+String(vi.merchant_name).replace(/[\\/:*?"<>|]/g,'') : '';
       const files = [['photo1_path','사진1'],['photo2_path','사진2'],['receipt1_path','영수증1'],['receipt2_path','영수증2']];
       for(const [f,label] of files){
         if(!vi[f]) continue;
@@ -322,7 +353,7 @@ async function exportZip(){
         try{
           const blob = await (await fetch(url)).blob();
           const date = ymd(vi.updated_at||vi.created_at);
-          zip.file(`${date}_${p.name}_방문지${i+1}_${label}.jpg`, blob);
+          zip.file(`${folder}/방문지${i+1}${biz}_${label}_${date}.jpg`, blob);
           n++;
         }catch(e){}
       }
@@ -332,7 +363,7 @@ async function exportZip(){
   const blob = await zip.generateAsync({type:'blob'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `밀양인더스트릿_증빙이미지_${ymd(new Date())}.zip`;
+  a.download = `밀양인더스트릿_증빙이미지_${ymd(new Date())}${SEL.size?'_선택'+targets.length+'명':''}.zip`;
   a.click(); URL.revokeObjectURL(a.href);
 }
 
