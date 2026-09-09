@@ -582,7 +582,7 @@ function visitCard(vi,i){
 }
 function slot(vi,field,label,kind){
   const has=!!vi[field];
-  const thumb=has?(vi[field+'_thumb']||localStorage.getItem('thv_'+vi[field])):null;
+  const thumb=has?(vi[field.replace('_path','_thumb')]||localStorage.getItem('thv_'+vi[field])):null;
   return `<div class="slot ${has?'done':''}" onclick="pickFile('${vi.id}','${field}','${kind}')">
     ${has?`${thumb?`<img src="${thumb}" alt="">`:`<span style="font-size:22px">✅</span><span>업로드 완료</span>`}<div class="tag">${label} · 다시 찍기</div>`
         :`<span style="font-size:22px">${kind==='receipt'?'🧾':'📷'}</span><span>${label}<br>탭해서 첨부</span>`}
@@ -614,7 +614,7 @@ async function handleFile(file,visitId,field,kind){
       dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(tb);});
     }catch(e){}
     const vi=VISITS.find(x=>x.id===visitId);
-    vi[field]=path; if(dataUrl)vi[field+'_thumb']=dataUrl;
+    vi[field]=path; if(dataUrl)vi[field.replace('_path','_thumb')]=dataUrl;
     await rpc('fn_upsert_visit',{p_token:TOKEN,p_visit:vi});
     refreshHome();
   }catch(e){alert('이미지를 처리하지 못했어요. 다른 사진으로 시도해 주세요.');}
