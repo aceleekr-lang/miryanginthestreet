@@ -370,7 +370,6 @@ const SURVEY_QUESTIONS = [
  {id:'q1',t:'text',q:'귀하의 거주지역은 어디입니까?',ph:'예: 경기도 ○○시'},
  {id:'q2',t:'single',q:'이번 밀양 방문 인원은 총 몇 명입니까?',o:['1명','2명','3명','4명','5명','6~10명']},
  {id:'q3',t:'single',q:'귀하의 방문 목적은 무엇입니까?',o:['기업·기관·단체 관광','근로자 관광','가족·친지와의 관광','친구·지인과의 관광']},
- {id:'q4',t:'single',q:'이번 밀양 방문은 누구와 함께하셨습니까?',o:['혼자','가족','친구·지인','직장 동료','기업·기관·단체'],etc:true},
  {id:'q5',t:'single',q:'이번 밀양 방문은 몇 번째입니까?',o:['처음 방문','2회','3회','4회 이상']},
  {id:'q6',t:'single',q:'디지털 관광주민증을 알고 계셨습니까?',o:['이번 방문 전부터 알고 있었다','이번 방문을 통해 알게 되었다','알고 있었으나 자세히 몰랐다','전혀 몰랐다']},
  {id:'q7',t:'single',q:'디지털 관광주민증을 발급받으셨습니까?',o:['기존에 발급받았다','이번 방문 전에 발급받았다','이번 방문 중 발급받았다','이번 방문 후 발급받을 예정이다']},
@@ -467,7 +466,7 @@ function addMemberRow(){
   const d=document.createElement('div');d.className='tm-row';
   d.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center';
   d.innerHTML=`<input class="t tm-name" placeholder="이름" style="flex:1">
-    <input class="t tm-rel" placeholder="관계 (예: 가족, 지인, 동료)" style="flex:1">
+    <input class="t tm-rel" placeholder="관계 (예: 부모, 배우자, 자녀)" style="flex:1">
     <button type="button" style="background:none;border:none;font-size:18px;color:var(--sub);cursor:pointer;padding:6px" onclick="this.parentElement.remove()">✕</button>`;
   document.getElementById('tm-list').appendChild(d);
 }
