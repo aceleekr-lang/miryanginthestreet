@@ -105,7 +105,7 @@ tr.row{cursor:pointer}tr.row:hover{background:var(--pine-soft)}
       <button class="bl" onclick="loadAll()">↻ 새로고침</button>
     </div>
     <table>
-      <thead><tr><th style="width:34px"><input type="checkbox" id="sel-all" onchange="toggleAll(this.checked)"></th><th>상태</th><th>성함</th><th>소속</th><th>연락처</th><th>방문지</th><th>제출일시</th></tr></thead>
+      <thead><tr><th style="width:34px"><input type="checkbox" id="sel-all" onchange="toggleAll(this.checked)"></th><th>상태</th><th>대표</th><th>팀인원</th><th>소속</th><th>연락처</th><th>방문지</th><th>제출일시</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
     <p class="muted" id="count" style="margin-top:10px"></p>
@@ -205,10 +205,10 @@ function renderTable(){
     <tr class="row" onclick="openDetail('${p.id}')">
       <td onclick="event.stopPropagation()"><input type="checkbox" ${SEL.has(p.id)?'checked':''} onchange="toggleSel('${p.id}',this.checked,event)"></td>
       <td><span class="badge b-${p.status}">${ST_LABEL[p.status]||p.status}</span></td>
-      <td><b>${esc(p.name)}</b></td><td>${esc(p.org)}</td><td>${fmtPhone(p.phone)}</td>
+      <td><b>${esc(p.name)}</b></td><td>${teamSize(p)}명</td><td>${esc(p.org)}</td><td>${fmtPhone(p.phone)}</td>
       <td>${readyVisits(p.id).length} / ${visitsOf(p.id).length}곳</td>
       <td class="muted">${p.submitted_at ? new Date(p.submitted_at).toLocaleString('ko-KR') : '-'}</td>
-    </tr>`).join('') || '<tr><td colspan="7" class="muted" style="padding:24px;text-align:center">해당하는 참가자가 없습니다.</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="8" class="muted" style="padding:24px;text-align:center">해당하는 참가자가 없습니다.</td></tr>';
   updateSelInfo();
 }
 function exportTargets(){
@@ -220,7 +220,10 @@ function exportTargets(){
 async function openDetail(id){
   CUR = PARTS.find(x=>x.id===id);
   const vs = visitsOf(id);
-  let html = `<h3>${esc(CUR.name)} <span class="badge b-${CUR.status}">${ST_LABEL[CUR.status]}</span></h3>
+  const tm = CUR.team_members||[];
+  let html = `<h3>${esc(CUR.name)} 팀 (${teamSize(CUR)}명) <span class="badge b-${CUR.status}">${ST_LABEL[CUR.status]}</span></h3>
+    <p style="font-size:13.5px;margin-top:4px"><b>팀원:</b> 대표 ${esc(CUR.name)}${tm.length?' · '+tm.map(m=>`${esc(m.name)}(${esc(m.relation)})`).join(' · '):' (단독)'}
+    <span class="muted">— 사진 2장 모두 전원 얼굴 확인</span></p>
     <p class="muted">${esc(CUR.org)} · ${fmtPhone(CUR.phone)} · 가입 ${new Date(CUR.created_at).toLocaleDateString('ko-KR')}
     ${CUR.submitted_at?` · 제출 ${new Date(CUR.submitted_at).toLocaleString('ko-KR')}`:''}
     ${CUR.deadline_override?` · <b style="color:var(--pine)">개별 마감 ${CUR.deadline_override}</b>`:''}</p>
@@ -235,6 +238,12 @@ async function openDetail(id){
       html += `<figure class="thumb"><img src="${url}" loading="lazy" onclick="zoom('${url}')"><figcaption>${label}</figcaption></figure>`;
     }
     html += `</div></div>`;
+  }
+  if(CUR.survey){
+    html += `<details style="margin-top:18px"><summary style="cursor:pointer;font-weight:700">📋 만족도 설문 응답 보기</summary>
+      <div style="font-size:13.5px;margin-top:10px;line-height:1.8">`+
+      SURVEY_COLS.map(([qid,label])=>`<div><b>${label}</b> — ${esc(svVal(CUR.survey[qid]))||'<span class="muted">무응답</span>'}</div>`).join('')+
+      `</div></details>`;
   }
   html += `<div class="acts">
     <button class="bp" onclick="review('approved')">✓ 승인</button>
@@ -308,11 +317,14 @@ async function exportExcel(){
   for(const p of targets){
     const vs = visitsOf(p.id);
     const row = {
-      '상태': ST_LABEL[p.status]||p.status, '성함': p.name, '소속': p.org, '연락처': fmtPhone(p.phone),
+      '상태': ST_LABEL[p.status]||p.status, '대표': p.name,
+      '팀인원': teamSize(p), '팀원 명단': (p.team_members||[]).map(m=>`${m.name}(${m.relation})`).join(', '),
+      '소속': p.org, '연락처': fmtPhone(p.phone),
       '가입일': new Date(p.created_at).toLocaleDateString('ko-KR'),
       '제출일시': p.submitted_at? new Date(p.submitted_at).toLocaleString('ko-KR') : '',
       '반려사유': p.reject_reason||'', '개별마감': p.deadline_override||'',
     };
+    for(const [qid,label] of SURVEY_COLS) row['설문 '+label] = svVal(p.survey?.[qid]);
     for(let i=0;i<maxV;i++){
       const vi = vs[i]; const n = i+1;
       const picked = vi && !String(vi.merchant_name).startsWith('(업체 미선택');
@@ -327,7 +339,8 @@ async function exportExcel(){
     rows.push(row);
   }
   const ws = XLSX.utils.json_to_sheet(rows);
-  const cols=[{wch:8},{wch:10},{wch:18},{wch:14},{wch:11},{wch:18},{wch:24},{wch:11}];
+  const cols=[{wch:8},{wch:10},{wch:7},{wch:30},{wch:18},{wch:14},{wch:11},{wch:18},{wch:24},{wch:11}];
+  for(const _ of SURVEY_COLS) cols.push({wch:16});
   for(let i=0;i<maxV;i++) cols.push({wch:20},{wch:14},{wch:12},{wch:55});
   ws['!cols']=cols;
   const wb = XLSX.utils.book_new();
@@ -369,6 +382,13 @@ async function exportZip(){
 
 // ---------- 유틸 ----------
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+const SURVEY_COLS=[['q1','1.거주지역'],['q2','2.방문인원'],['q3','3.방문목적'],['q4','4.동행'],
+['q5','5.방문차수'],['q6','6.주민증 인지'],['q7','7.발급시점'],['q8','8.안내 충분'],['q9','9.기업/근로자'],
+['q10','10.이용 업소유형'],['q11','11.이용 도움'],['q12','12.1인 소비액'],['q13','13.지출항목'],
+['q14','14.추가소비 의향'],['q15','15.전반 만족'],['q16','16.관심 증가'],['q17','17.재방문 의향'],
+['q18','18.추천 의향'],['q19','19.기대효과'],['q20','20.강화 희망'],['q21','21.기타 의견']];
+function svVal(x){ return Array.isArray(x)?x.join('; '):(x??''); }
+function teamSize(p){ return 1 + ((p.team_members&&p.team_members.length)||0); }
 function fmtPhone(p){return String(p||'').replace(/^(\d{3})(\d{3,4})(\d{4})$/,'$1-$2-$3');}
 
 // 세션 유지 시 자동 진입

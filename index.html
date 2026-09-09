@@ -18,7 +18,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{font-family:Pretendard,-apple-system,sans-serif;background:var(--bg);color:var(--ink);
-  font-size:16px;line-height:1.55;letter-spacing:-.01em}
+  font-size:16px;line-height:1.55;letter-spacing:-.01em;word-break:keep-all;overflow-wrap:break-word}
 #app{max-width:520px;margin:0 auto;min-height:100vh;padding:0 0 48px}
 .screen{display:none;padding:20px}
 .screen.on{display:block}
@@ -80,7 +80,7 @@ input.t:focus{outline:none;border-color:var(--pine)}
 .slot.done{border-style:solid;border-color:var(--pine)}
 .slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .slot .tag{position:absolute;bottom:0;left:0;right:0;background:rgba(34,50,43,.72);color:#fff;
-  font-size:11px;padding:3px 0;text-align:center}
+  font-size:10.5px;padding:3px 2px;text-align:center;line-height:1.3;word-break:keep-all}
 .slot .busy{position:absolute;inset:0;background:rgba(255,255,255,.75);display:flex;align-items:center;
   justify-content:center;font-size:12px;color:var(--pine-deep);font-weight:700}
 .statusbar{display:flex;align-items:center;gap:10px;background:var(--pine-soft);border-radius:12px;
@@ -110,6 +110,13 @@ input.t:focus{outline:none;border-color:var(--pine)}
   align-items:center;justify-content:center;margin:30px auto 16px;font-size:34px}
 .center{text-align:center}
 footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:center;line-height:1.6}
+.sq{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.sq .qt{font-size:15px;font-weight:700;margin-bottom:10px}
+.sq .qt em{font-style:normal;color:var(--sub);font-weight:500;font-size:12.5px}
+.sopt{display:flex;gap:9px;align-items:center;padding:9px 10px;border:1.5px solid var(--line);
+  border-radius:9px;margin-bottom:7px;cursor:pointer;font-size:14.5px}
+.sopt input{width:19px;height:19px;accent-color:var(--pine);flex-shrink:0}
+.sopt:has(input:checked){border-color:var(--pine);background:var(--pine-soft)}
 .linkbtn{background:none;border:none;color:var(--sub);font-size:13px;text-decoration:underline;
   font-family:inherit;cursor:pointer;padding:8px}
 </style>
@@ -129,15 +136,19 @@ footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:cente
 
 <!-- 1. 가입 -->
 <section class="screen" id="sc-signup">
-  <h2 class="title">참가자 정보 입력</h2>
-  <p class="lead">혜택 신청 시 등록한 정보와 동일하게 적어주세요.</p>
+  <h2 class="title">팀 정보 입력</h2>
+  <p class="lead">팀 대표가 가입해 주세요.<br>혜택 신청 시 등록한 정보와 동일하게 적어주세요.</p>
   <div class="card">
     <label class="f">소속 (기업·단체명)</label>
     <input class="t" id="su-org" placeholder="예: (주)밀양컴퍼니">
-    <label class="f">성함</label>
+    <label class="f">대표자 성함</label>
     <input class="t" id="su-name" placeholder="예: 김밀양">
     <label class="f">연락처</label>
     <input class="t" id="su-phone" inputmode="numeric" placeholder="010-0000-0000" maxlength="13">
+    <label class="f">함께 여행한 팀원 — 이름·관계</label>
+    <div id="tm-list"></div>
+    <button class="btn line" type="button" style="padding:10px;font-size:14px;margin-top:2px" onclick="addMemberRow()">+ 팀원 추가</button>
+    <p style="font-size:12.5px;color:var(--sub);margin-top:6px">대표자 본인은 적지 않아도 돼요. 함께 여행한 팀원(가족·지인·동료 등)을 모두 등록해 주세요.</p>
     <label class="f">핀번호 6자리 (로그인에 사용해요)</label>
     <input class="t" id="su-pin" inputmode="numeric" type="password" maxlength="6" placeholder="숫자 6자리">
     <label class="f">핀번호 확인</label>
@@ -184,10 +195,10 @@ footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:cente
   <p class="lead">증빙 접수를 위해 아래 내용을 확인해 주세요.</p>
   <label class="chk" id="ck1w"><input type="checkbox" id="ck1" onchange="ckStyle()">
     <span><b>개인정보 수집·이용 동의 <em style="color:var(--coral);font-style:normal">(필수)</em></b>
-    <small>소속·성함·연락처·증빙자료 / 정산 및 감사 규정에 따라 5년 보관 후 파기 · <a href="#" onclick="openPolicy();return false">전문 보기</a></small></span></label>
+    <small>대표자 소속·성함·연락처, 팀원 성명·관계, 증빙자료 / 정산 및 감사 규정에 따라 5년 보관 후 파기 · <a href="#" onclick="openPolicy();return false">전문 보기</a></small></span></label>
   <label class="chk" id="ck2w"><input type="checkbox" id="ck2" onchange="ckStyle()">
     <span><b>얼굴 사진 수집 동의 <em style="color:var(--coral);font-style:normal">(필수)</em></b>
-    <small>방문 사실 확인 목적으로만 사용하며 그 외 용도로 쓰지 않습니다</small></span></label>
+    <small>팀원 전원의 얼굴 사진을 방문 사실 확인 목적으로만 사용하며 그 외 용도로 쓰지 않습니다</small></span></label>
   <p class="err" id="ck-err">두 항목 모두 동의해야 진행할 수 있어요.</p>
   <button class="btn p" onclick="goDuty()">다음</button>
 </section>
@@ -271,7 +282,7 @@ footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:cente
   <div class="card" style="background:var(--pine-soft);border-color:var(--pine-line)">
     <b style="font-size:15px">준비하실 것 (방문지마다)</b>
     <p style="font-size:14px;color:var(--pine-deep);margin-top:6px">
-    ① 본인 얼굴이 나온 현장 사진 2장<br>
+    ① 팀원 전원의 얼굴이 나온 현장 사진 2장 — <b>2장 모두</b> 전원이 나와야 해요 (셀카·단체샷, 지나가는 분께 부탁 추천)<br>
     ② 영수증 사진 — <b>날짜와 상호가 보이게</b> 촬영<br>
     <span style="font-size:13px">※ 카드 영수증 또는 카드단말기에서 출력된 현금 영수증만 인정됩니다. 계좌이체 내역·문자 캡처는 인정되지 않아요.</span></p>
   </div>
@@ -281,6 +292,16 @@ footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:cente
   <button class="btn g" id="add-visit" onclick="addVisit()">+ 방문지 추가</button>
   <div id="submit-area" style="margin-top:18px"></div>
   <p class="center"><button class="linkbtn" onclick="logout()">로그아웃</button></p>
+</section>
+
+<!-- 8.5 만족도 설문 -->
+<section class="screen" id="sc-survey">
+  <h2 class="title">만족도 설문</h2>
+  <p class="lead">제출 전 마지막 단계예요. 응답은 통계자료로만 활용되며 향후 사업 개선에 반영됩니다.</p>
+  <div id="survey-body"></div>
+  <p class="err" id="sv-err"></p>
+  <button class="btn p" onclick="surveySubmit()">설문 완료하고 제출하기</button>
+  <button class="btn line" onclick="show('sc-home');refreshHome()">뒤로 (나중에 제출)</button>
 </section>
 
 <!-- 9. 제출 완료 -->
@@ -328,7 +349,7 @@ footer.fine{padding:26px 20px 10px;font-size:12px;color:#93A199;text-align:cente
   <div class="sh"><b>개인정보 수집·이용 안내</b><button onclick="closeModal('m-policy')">닫기</button></div>
   <div class="sb policy">
     <h4>수집 주체</h4>밀양문화관광재단 (담당: 관광팀)
-    <h4>수집 항목</h4>소속, 성함, 연락처 / 방문 증빙자료(본인 얼굴이 포함된 현장 사진, 영수증 사진) / 만족도 조사 응답
+    <h4>수집 항목</h4>대표자의 소속·성함·연락처, 팀원의 성명·관계 / 방문 증빙자료(팀원 전원의 얼굴이 포함된 현장 사진, 영수증 사진) / 만족도 조사 응답
     <h4>수집·이용 목적</h4>밀양인더스트릿 혜택 수혜자의 방문 사실 확인, 사업 결과 정산 및 보고, 미제출자 확인 및 안내
     <h4>보유 및 파기</h4>정산 및 감사 규정에 따라 수집일로부터 5년간 보관 후 지체 없이 파기합니다. 미제출에 따른 향후 사업 참여 제한 확인 목적의 최소 정보도 같은 기간 보관됩니다.
     <h4>얼굴 사진에 관하여</h4>얼굴이 포함된 현장 사진은 방문 사실 확인 목적으로만 이용하며, 홍보 등 다른 목적으로 사용하지 않습니다.
@@ -343,7 +364,81 @@ let TOKEN = localStorage.getItem('mis_token') || null;
 let ME = null, VISITS = [], MERCHANTS = [], SETTINGS = {};
 let mmMode = null; // null=열람, 'pick:visitId'=선택
 let mmCat = '전체', mmRegion = '전체';
-const SURVEY_QUESTIONS = []; // 설문 확정 시 여기에 문항 배열 삽입
+const SURVEY_QUESTIONS = [
+ {id:'q1',t:'text',q:'귀하의 거주지역은 어디입니까?',ph:'예: 경기도 ○○시'},
+ {id:'q2',t:'single',q:'이번 밀양 방문 인원은 총 몇 명입니까?',o:['1명','2명','3명','4명','5명','6~10명']},
+ {id:'q3',t:'single',q:'귀하의 방문 목적은 무엇입니까?',o:['기업·기관·단체 관광','근로자 관광','가족·친지와의 관광','친구·지인과의 관광']},
+ {id:'q4',t:'single',q:'이번 밀양 방문은 누구와 함께하셨습니까?',o:['혼자','가족','친구·지인','직장 동료','기업·기관·단체'],etc:true},
+ {id:'q5',t:'single',q:'이번 밀양 방문은 몇 번째입니까?',o:['처음 방문','2회','3회','4회 이상']},
+ {id:'q6',t:'single',q:'디지털 관광주민증을 알고 계셨습니까?',o:['이번 방문 전부터 알고 있었다','이번 방문을 통해 알게 되었다','알고 있었으나 자세히 몰랐다','전혀 몰랐다']},
+ {id:'q7',t:'single',q:'디지털 관광주민증을 발급받으셨습니까?',o:['기존에 발급받았다','이번 방문 전에 발급받았다','이번 방문 중 발급받았다','이번 방문 후 발급받을 예정이다']},
+ {id:'q8',t:'single',q:'디지털 관광주민증의 등록·이용 방법 안내가 충분했다고 생각하십니까?',o:["매우 그렇다", "그렇다", "보통이다", "그렇지 않다", "전혀 그렇지 않다"]},
+ {id:'q9',t:'single',q:'이번 방문 기준, 기업 또는 타지역 근로자에 해당하십니까?',o:['기업·기관·단체로 방문하였다','타지역 근로자로 방문하였다','기업·기관 및 근로자 동반 방문이다','해당 없음']},
+ {id:'q10',t:'multi',q:'이용하신 디지털관광주민증 등록 업소의 유형은 무엇입니까?',o:['음식점','카페','관광지·관광시설','숙박시설','체험시설','쇼핑·판매시설'],etc:true},
+ {id:'q11',t:'single',q:'이번 사업이 밀양의 관광지·지역 업체 이용에 도움이 되었다고 생각하십니까?',o:["매우 그렇다", "그렇다", "보통이다", "그렇지 않다", "전혀 그렇지 않다"]},
+ {id:'q12',t:'single',q:'이번 방문에서 1인당 소비한 금액은 어느 정도입니까? (지원금·교통비 제외)',o:['1만원 미만','1~3만원 미만','3~5만원 미만','5~10만원 미만','10~20만원 미만','20만원 이상']},
+ {id:'q13',t:'multi',q:'이번 방문에서 지출한 항목은 무엇입니까?',o:['식음료','숙박','관광지 입장료','체험·관광상품','쇼핑·지역특산품','교통·주유'],etc:true},
+ {id:'q14',t:'single',q:'향후 밀양에서 추가적인 관광 소비활동을 할 의향이 있습니까?',o:["매우 있다", "있다", "보통이다", "없다", "전혀 없다"]},
+ {id:'q15',t:'single',q:'이번 사업 전반에 대해 얼마나 만족하십니까?',o:['매우 만족','만족','보통','불만족','매우 불만족']},
+ {id:'q16',t:'single',q:'이번 사업을 통해 밀양 관광에 대한 관심이 높아졌습니까?',o:["매우 그렇다", "그렇다", "보통이다", "그렇지 않다", "전혀 그렇지 않다"]},
+ {id:'q17',t:'single',q:'향후 밀양을 다시 방문할 의향이 있습니까?',o:["매우 있다", "있다", "보통이다", "없다", "전혀 없다"]},
+ {id:'q18',t:'single',q:'가족·친구·동료 등에게 밀양 관광을 추천할 의향이 있습니까?',o:["매우 있다", "있다", "보통이다", "없다", "전혀 없다"]},
+ {id:'q19',t:'multi',q:'본 사업을 통해 기대되는 지역경제·관광 활성화 효과는 무엇이라고 생각하십니까?',o:['지역 음식점·카페 등 매출 증가','숙박시설 이용 증가','지역 관광지 방문객 증가','지역특산품·기념품 구매 증가','지역 내 관광소비 확대','밀양 관광 인지도 향상','재방문객 증가'],etc:true},
+ {id:'q20',t:'single',q:'향후 본 사업이 지속 운영된다면 어떤 부분이 가장 강화되었으면 좋겠습니까?',o:['디지털 관광주민증 혜택 확대','참여 업소 확대','관광지·체험 프로그램 확대','기업·근로자 대상 관광 프로그램 확대','홍보 강화','미션·이벤트 다양화','교통·이동 편의 개선'],etc:true},
+ {id:'q21',t:'textarea',q:'밀양 관광 및 본 사업에 대한 기타 의견을 자유롭게 작성해 주세요.',opt:true},
+];
+function renderSurvey(){
+  document.getElementById('survey-body').innerHTML = SURVEY_QUESTIONS.map((s,i)=>{
+    const multi = s.t==='multi';
+    let body='';
+    if(s.t==='text') body=`<input class="t" id="sv-${s.id}" placeholder="${s.ph||''}">`;
+    else if(s.t==='textarea') body=`<textarea class="t" id="sv-${s.id}" rows="3" style="resize:vertical" placeholder="자유롭게 적어주세요 (선택)"></textarea>`;
+    else{
+      body = s.o.map((o,j)=>`<label class="sopt"><input type="${multi?'checkbox':'radio'}" name="sv-${s.id}" value="${o}">${o}</label>`).join('');
+      if(s.etc) body += `<label class="sopt"><input type="${multi?'checkbox':'radio'}" name="sv-${s.id}" value="__etc__">기타</label>
+        <input class="t" id="sv-${s.id}-etc" placeholder="기타 내용을 적어주세요" style="display:none;margin-top:2px">`;
+    }
+    return `<div class="sq" id="sq-${s.id}"><div class="qt">${i+1}. ${s.q} ${multi?'<em>(복수 선택 가능)</em>':''}${s.opt?'<em>(선택)</em>':''}</div>${body}</div>`;
+  }).join('');
+  // 기타 선택 시 입력창 노출
+  SURVEY_QUESTIONS.filter(s=>s.etc).forEach(s=>{
+    document.querySelectorAll(`input[name="sv-${s.id}"]`).forEach(inp=>{
+      inp.addEventListener('change',()=>{
+        const etcOn=[...document.querySelectorAll(`input[name="sv-${s.id}"]:checked`)].some(x=>x.value==='__etc__');
+        document.getElementById(`sv-${s.id}-etc`).style.display=etcOn?'block':'none';
+      });
+    });
+  });
+}
+function surveyCollect(){
+  const ans={};
+  for(const s of SURVEY_QUESTIONS){
+    if(s.t==='text'||s.t==='textarea'){
+      const val=document.getElementById('sv-'+s.id).value.trim();
+      if(!val&&!s.opt) return {miss:s.id};
+      ans[s.id]=val; continue;
+    }
+    const picked=[...document.querySelectorAll(`input[name="sv-${s.id}"]:checked`)].map(x=>x.value);
+    if(!picked.length) return {miss:s.id};
+    const etcVal=s.etc?document.getElementById(`sv-${s.id}-etc`).value.trim():'';
+    if(picked.includes('__etc__')&&!etcVal) return {miss:s.id,etc:true};
+    const vals=picked.map(p=>p==='__etc__'?('기타: '+etcVal):p);
+    ans[s.id]=s.t==='multi'?vals:vals[0];
+  }
+  return {ans};
+}
+function surveySubmit(){
+  const err=document.getElementById('sv-err');err.classList.remove('on');
+  const r=surveyCollect();
+  if(r.miss){
+    const el=document.getElementById('sq-'+r.miss);
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.style.borderColor='var(--coral)';
+    showErr(err, r.etc?'"기타"를 선택하셨어요. 내용을 적어주세요.':'응답하지 않은 문항이 있어요.');
+    return;
+  }
+  doSubmit(r.ans);
+}
 
 // ---------- 공통 ----------
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
@@ -361,22 +456,39 @@ function ckStyle(){[['ck1','ck1w'],['ck2','ck2w'],['ck3','ck3w']].forEach(([c,w]
   if(el&&wr)wr.classList.toggle('on',el.checked);});}
 
 // ---------- 가입/로그인 ----------
+function memberRows(){
+  return [...document.querySelectorAll('#tm-list .tm-row')].map(r=>({
+    name:r.querySelector('.tm-name').value.trim(), relation:r.querySelector('.tm-rel').value.trim()
+  })).filter(m=>m.name||m.relation);
+}
+function addMemberRow(){
+  const d=document.createElement('div');d.className='tm-row';
+  d.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:center';
+  d.innerHTML=`<input class="t tm-name" placeholder="이름" style="flex:1">
+    <input class="t tm-rel" placeholder="관계 (예: 가족, 지인, 동료)" style="flex:1">
+    <button type="button" style="background:none;border:none;font-size:18px;color:var(--sub);cursor:pointer;padding:6px" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('tm-list').appendChild(d);
+}
 function signupConfirm(){
   const org=v('su-org'),name=v('su-name'),phone=v('su-phone'),pin=v('su-pin'),pin2=v('su-pin2');
   const err=document.getElementById('su-err');err.classList.remove('on');
   if(!org||!name){return showErr(err,'소속과 성함을 입력해 주세요.');}
   if(phone.replace(/\D/g,'').length<10){return showErr(err,'연락처를 정확히 입력해 주세요.');}
+  const members=memberRows();
+  if(members.some(m=>!m.name||!m.relation)){return showErr(err,'팀원의 이름과 관계를 모두 채우거나 빈 줄은 ✕로 지워주세요.');}
   if(!/^\d{6}$/.test(pin)){return showErr(err,'핀번호는 숫자 6자리예요.');}
   if(pin!==pin2){return showErr(err,'핀번호 확인이 일치하지 않아요.');}
-  if(!confirm(`입력하신 정보가 맞는지 확인해 주세요.\n\n소속: ${org}\n성함: ${name}\n연락처: ${phone}\n\n이대로 가입할까요?`))return;
-  signup(org,name,phone,pin);
+  const tmTxt=members.length?`\n팀원 ${members.length}명: ${members.map(m=>`${m.name}(${m.relation})`).join(', ')}`:'\n팀원: 없음 (대표 단독)';
+  if(!confirm(`입력하신 정보가 맞는지 확인해 주세요.\n\n소속: ${org}\n대표: ${name}\n연락처: ${phone}${tmTxt}\n\n이대로 가입할까요?`))return;
+  signup(org,name,phone,pin,members);
 }
-async function signup(org,name,phone,pin){
+async function signup(org,name,phone,pin,members){
   const err=document.getElementById('su-err');
   const r=await rpc('fn_signup',{p_phone:phone,p_name:name,p_org:org,p_pin:pin});
   if(r.error==='phone_exists')return showErr(err,'이미 가입된 연락처예요. 로그인으로 진행해 주세요.');
   if(r.error)return showErr(err,'가입에 실패했어요. 잠시 후 다시 시도해 주세요.');
   TOKEN=r.token;localStorage.setItem('mis_token',TOKEN);
+  await rpc('fn_set_team',{p_token:TOKEN,p_members:members||[]});
   ME={status:'joined'};show('sc-consent');
 }
 async function login(){
@@ -461,8 +573,8 @@ function visitCard(vi,i){
     <button class="btn line" style="padding:10px;font-size:14px;margin-bottom:10px"
       onclick="openMerchants('${vi.id}')">${picked?'업체 변경':'등록업체 선택'}</button>
     <div class="slots">
-      ${slot(vi,'photo1_path','얼굴 사진 1','face')}
-      ${slot(vi,'photo2_path','얼굴 사진 2','face')}
+      ${slot(vi,'photo1_path','전원 사진 1','face')}
+      ${slot(vi,'photo2_path','전원 사진 2','face')}
       ${slot(vi,'receipt1_path','영수증','receipt')}
     </div>
     <p class="center" style="margin-top:8px"><button class="linkbtn" onclick="delVisit('${vi.id}')">이 방문지 삭제</button></p>`;
@@ -470,7 +582,7 @@ function visitCard(vi,i){
 }
 function slot(vi,field,label,kind){
   const has=!!vi[field];
-  const thumb=has?localStorage.getItem('thv_'+vi[field]):null;
+  const thumb=has?(vi[field+'_thumb']||localStorage.getItem('thv_'+vi[field])):null;
   return `<div class="slot ${has?'done':''}" onclick="pickFile('${vi.id}','${field}','${kind}')">
     ${has?`${thumb?`<img src="${thumb}" alt="">`:`<span style="font-size:22px">✅</span><span>업로드 완료</span>`}<div class="tag">${label} · 다시 찍기</div>`
         :`<span style="font-size:22px">${kind==='receipt'?'🧾':'📷'}</span><span>${label}<br>탭해서 첨부</span>`}
@@ -496,14 +608,13 @@ async function handleFile(file,visitId,field,kind){
     const {error}=await sb.storage.from(C.STORAGE_BUCKET).upload(path,blob,{contentType:'image/jpeg'});
     busy.remove();
     if(error){alert('업로드에 실패했어요. 통신 상태를 확인하고 다시 시도해 주세요.\n\n(오류: '+(error.message||error.error||'알 수 없음')+')');return;}
+    let dataUrl=null;
     try{
       const tb=await compress(file,{max:320,q:0.6});
-      const dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(tb);});
-      const vi0=VISITS.find(x=>x.id===visitId);
-      if(vi0&&vi0[field])localStorage.removeItem('thv_'+vi0[field]);
-      localStorage.setItem('thv_'+path,dataUrl);
+      dataUrl=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(tb);});
     }catch(e){}
-    const vi=VISITS.find(x=>x.id===visitId);vi[field]=path;
+    const vi=VISITS.find(x=>x.id===visitId);
+    vi[field]=path; if(dataUrl)vi[field+'_thumb']=dataUrl;
     await rpc('fn_upsert_visit',{p_token:TOKEN,p_visit:vi});
     refreshHome();
   }catch(e){alert('이미지를 처리하지 못했어요. 다른 사진으로 시도해 주세요.');}
@@ -549,9 +660,12 @@ function tempSave(){
   alert('여기까지 저장되었어요!\n\n다음 방문지에 다녀오신 뒤 같은 연락처와 핀번호로 로그인하면 이어서 올릴 수 있습니다.');
 }
 async function submitAll(){
-  if(SURVEY_QUESTIONS.length>0){/* 설문 확정 시 이 자리에서 설문 화면으로 이동 */}
+  if(SURVEY_QUESTIONS.length>0 && !ME.survey_done){renderSurvey();show('sc-survey');return;}
+  doSubmit(null);
+}
+async function doSubmit(surveyAns){
   if(!confirm('제출할까요? 제출 후에도 마감 전까지는 수정할 수 있어요.'))return;
-  const r=await rpc('fn_submit',{p_token:TOKEN,p_survey:null});
+  const r=await rpc('fn_submit',{p_token:TOKEN,p_survey:surveyAns});
   if(r.error==='need_two_visits')return alert('사진과 영수증이 모두 첨부된 방문지가 2곳 이상 필요해요.');
   if(r.error==='deadline_passed')return alert('제출 기한이 지났어요. 밀양문화관광재단 관광팀으로 문의해 주세요.');
   if(r.error==='closed')return show('sc-closed');
