@@ -228,6 +228,17 @@ async function openDetail(id){
     ${CUR.submitted_at?` · 제출 ${new Date(CUR.submitted_at).toLocaleString('ko-KR')}`:''}
     ${CUR.deadline_override?` · <b style="color:var(--pine)">개별 마감 ${CUR.deadline_override}</b>`:''}</p>
     ${CUR.reject_reason?`<p style="margin-top:6px;color:var(--danger);font-size:13.5px">반려 사유: ${esc(CUR.reject_reason)}</p>`:''}`;
+  const prf=(CUR.dtc_proofs||[]).filter(x=>x&&x.path);
+  html += `<div style="margin-top:14px"><b>📱 주민증 발급 인증 (${prf.length}/${teamSize(CUR)}명)</b>`;
+  if(prf.length){
+    html += `<div class="grid2">`;
+    for(const d of prf){
+      const url = await signed(d.path, 3600);
+      html += `<figure class="thumb"><img src="${url}" loading="lazy" onclick="zoom('${url}')"><figcaption>${esc(d.name)}(${esc(d.relation)})</figcaption></figure>`;
+    }
+    html += `</div>`;
+  } else { html += ` <span class="muted">— 미제출</span>`; }
+  html += `</div>`;
   for(const [i,vi] of vs.entries()){
     const picked = !String(vi.merchant_name).startsWith('(업체 미선택');
     html += `<div style="margin-top:16px"><b>방문지 ${i+1} — ${picked?esc(vi.merchant_name):'(업체 미선택)'}</b>
@@ -320,6 +331,7 @@ async function exportExcel(){
       '상태': ST_LABEL[p.status]||p.status, '대표': p.name,
       '팀인원': teamSize(p), '팀원 명단': (p.team_members||[]).map(m=>`${m.name}(${m.relation})`).join(', '),
       '소속': p.org, '연락처': fmtPhone(p.phone),
+      '주민증인증': ((p.dtc_proofs||[]).filter(x=>x&&x.path).length)+'/'+teamSize(p),
       '가입일': new Date(p.created_at).toLocaleDateString('ko-KR'),
       '제출일시': p.submitted_at? new Date(p.submitted_at).toLocaleString('ko-KR') : '',
       '반려사유': p.reject_reason||'', '개별마감': p.deadline_override||'',
@@ -339,7 +351,7 @@ async function exportExcel(){
     rows.push(row);
   }
   const ws = XLSX.utils.json_to_sheet(rows);
-  const cols=[{wch:8},{wch:10},{wch:7},{wch:30},{wch:18},{wch:14},{wch:11},{wch:18},{wch:24},{wch:11}];
+  const cols=[{wch:8},{wch:10},{wch:7},{wch:30},{wch:18},{wch:14},{wch:9},{wch:11},{wch:18},{wch:24},{wch:11}];
   for(const _ of SURVEY_COLS) cols.push({wch:16});
   for(let i=0;i<maxV;i++) cols.push({wch:20},{wch:14},{wch:12},{wch:55});
   ws['!cols']=cols;
@@ -355,6 +367,15 @@ async function exportZip(){
   for(const p of targets){
     idx++;
     const folder = `${String(idx).padStart(3,'0')}_${p.name.replace(/[\\/:*?"<>|]/g,'')}`;
+    for(const d of (p.dtc_proofs||[])){
+      if(!d||!d.path) continue;
+      const url = await signed(d.path, 600);
+      try{
+        const blob = await (await fetch(url)).blob();
+        zip.file(`${folder}/주민증인증_${String(d.name).replace(/[\\/:*?"<>|]/g,'')}.jpg`, blob);
+        n++;
+      }catch(e){}
+    }
     const vs = visitsOf(p.id);
     for(const [i,vi] of vs.entries()){
       const picked = !String(vi.merchant_name).startsWith('(업체 미선택');
