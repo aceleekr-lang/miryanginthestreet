@@ -458,7 +458,7 @@ function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.re
 function closeModal(id){document.getElementById(id).classList.remove('on');}
 function openPolicy(){document.getElementById('m-policy').classList.add('on');}
 async function rpc(name, args){const {data,error} = await sb.rpc(name,args);
-  if(error){console.error(name,error);return {error:'network'};} return data;}
+  if(error){console.error(name,error);return {error:'network',_msg:(error.message||error.code||error.hint||'')};} return data;}
 function hyphen(el){el.value = el.value.replace(/\D/g,'').replace(/^(\d{3})(\d{0,4})(\d{0,4}).*/,
   (m,a,b,c)=>c?`${a}-${b}-${c}`:b?`${a}-${b}`:a);}
 ['su-phone','li-phone'].forEach(id=>{const el=document.getElementById(id);
@@ -498,7 +498,7 @@ async function signup(org,name,phone,pin,members){
   const err=document.getElementById('su-err');
   const r=await rpc('fn_signup',{p_phone:phone,p_name:name,p_org:org,p_pin:pin});
   if(r.error==='phone_exists')return showErr(err,'이미 가입된 연락처예요. 로그인으로 진행해 주세요.');
-  if(r.error)return showErr(err,'가입에 실패했어요. 잠시 후 다시 시도해 주세요.');
+  if(r.error)return showErr(err,'가입에 실패했어요. 잠시 후 다시 시도해 주세요.'+(r._msg?' [오류: '+r._msg+']':''));
   TOKEN=r.token;localStorage.setItem('mis_token',TOKEN);
   await rpc('fn_set_team',{p_token:TOKEN,p_members:members||[]});
   ME={status:'joined',name:name,org:org,team_members:members||[],dtc_proofs:[]};show('sc-consent');
@@ -508,7 +508,7 @@ async function login(){
   const r=await rpc('fn_login',{p_phone:v('li-phone'),p_pin:v('li-pin')});
   if(r.error==='not_found')return showErr(err,'가입 내역이 없는 연락처예요.');
   if(r.error==='wrong_pin')return showErr(err,'핀번호가 맞지 않아요.');
-  if(r.error)return showErr(err,'로그인에 실패했어요. 잠시 후 다시 시도해 주세요.');
+  if(r.error)return showErr(err,'로그인에 실패했어요. 잠시 후 다시 시도해 주세요.'+(r._msg?' [오류: '+r._msg+']':''));
   TOKEN=r.token;localStorage.setItem('mis_token',TOKEN);
   if(r.must_change_pin){show('sc-pin');return;}
   await loadMe(true);
